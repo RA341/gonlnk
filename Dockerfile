@@ -8,7 +8,7 @@ RUN flutter pub get
 
 RUN flutter build web --wasm
 
-FROM golang:1 AS back
+FROM golang:1-alpine AS back
 
 WORKDIR /app
 
@@ -22,7 +22,7 @@ RUN CGO_ENABLED=1 go build -o gonlnk "./cmd/gonlnk"
 
 RUN chmod +x ./gonlnk
 
-FROM scratch
+FROM alpine
 
 WORKDIR /app
 
