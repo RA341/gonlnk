@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../api/api.dart';
 
 class SettingsPage extends HookConsumerWidget {
@@ -9,6 +10,7 @@ class SettingsPage extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final serverUrl = ref.watch(serverUrlProvider);
+    final downloadPath = ref.watch(downloadPathProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -28,6 +30,22 @@ class SettingsPage extends HookConsumerWidget {
                     _showUrlEditDialog(context, ref, serverUrl);
                   },
           ),
+          if (!kIsWeb) ...[
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.folder),
+              title: const Text('Download Path'),
+              subtitle: Text(downloadPath ?? 'Not set'),
+              trailing: const Icon(Icons.edit),
+              onTap: () async {
+                final selectedPath =
+                    await FilePicker.platform.getDirectoryPath();
+                if (selectedPath != null) {
+                  ref.read(downloadPathProvider.notifier).setPath(selectedPath);
+                }
+              },
+            ),
+          ],
           const Divider(),
           ListTile(
             leading: const Icon(Icons.person),

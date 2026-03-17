@@ -1,8 +1,15 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:http/http.dart' as http;
+import 'package:path/path.dart' as p;
 import 'providers.dart';
+import '../../api/api.dart';
 import '../../gen/library/v1/library.pb.dart' as libraryv1library;
 
 class MyHomePage extends HookConsumerWidget {
@@ -10,11 +17,75 @@ class MyHomePage extends HookConsumerWidget {
 
   final String title;
 
+  Future<void> _downloadFile(
+    BuildContext context,
+    WidgetRef ref,
+    libraryv1library.Link link,
+    String serverUrl,
+  ) async {
+    if (kIsWeb) {
+      final baseUrl = serverUrl.endsWith('/')
+          ? serverUrl.substring(0, serverUrl.length - 1)
+          : serverUrl;
+      final downloadUrl = Uri.parse('$baseUrl/api/files/serve/${link.id}');
+      if (!await launchUrl(downloadUrl, mode: LaunchMode.externalApplication)) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Could not launch $downloadUrl')),
+          );
+        }
+      }
+      return;
+    }
+
+    String? downloadPath = ref.read(downloadPathProvider);
+
+    if (downloadPath == null || downloadPath.isEmpty) {
+      final selectedPath = await FilePicker.platform.getDirectoryPath();
+      if (selectedPath == null) return;
+      await ref.read(downloadPathProvider.notifier).setPath(selectedPath);
+      downloadPath = selectedPath;
+    }
+
+    final baseUrl = serverUrl.endsWith('/')
+        ? serverUrl.substring(0, serverUrl.length - 1)
+        : serverUrl;
+    final downloadUrl = Uri.parse('$baseUrl/api/files/serve/${link.id}');
+
+    try {
+      final response = await http.get(downloadUrl);
+      if (response.statusCode == 200) {
+        final fileName = link.title.isNotEmpty
+            ? link.title
+            : p.basename(link.url.isNotEmpty ? link.url : 'downloaded_file');
+        
+        final safeFileName = fileName.replaceAll(RegExp(r'[<>:"/\\|?*]'), '_');
+        final file = File(p.join(downloadPath, safeFileName));
+        await file.writeAsBytes(response.bodyBytes);
+
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('File saved to ${file.path}')),
+          );
+        }
+      } else {
+        throw Exception('Failed to download file: ${response.statusCode}');
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error downloading file: $e')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final urlListAsync = ref.watch(urlListProvider);
     final addUrl = ref.read(addUrlProvider);
     final retryAction = ref.read(retryActionProvider);
+    final serverUrl = ref.watch(serverUrlProvider) ?? 'http://localhost:8080';
 
     return Scaffold(
       appBar: AppBar(
@@ -43,6 +114,13 @@ class MyHomePage extends HookConsumerWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(link.status),
+                        if (link.status.toLowerCase() == 'complete')
+                          IconButton(
+                            icon: const Icon(Icons.download),
+                            onPressed: () =>
+                                _downloadFile(context, ref, link, serverUrl),
+                            tooltip: 'Download',
+                          ),
                         IconButton(
                           icon: const Icon(Icons.refresh),
                           onPressed: () => retryAction(link),

@@ -34,4 +34,5 @@ type Store interface {
 	Add(ctx context.Context, link *Link) error
 	Delete(ctx context.Context, link *Link) error
 	Update(ctx context.Context, link *Link) error
+	Get(ctx context.Context, id uint) (Link, error)
 }

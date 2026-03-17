@@ -19,6 +19,12 @@ func NewStoreGorm(db *gorm.DB) *StoreGorm {
 	return &StoreGorm{db: db}
 }
 
+func (s StoreGorm) Get(ctx context.Context, id uint) (Link, error) {
+	var link Link
+	err := s.db.WithContext(ctx).Where("id = ?", id).First(&link).Error
+	return link, err
+}
+
 func (s StoreGorm) Add(ctx context.Context, link *Link) error {
 	return s.db.WithContext(ctx).Create(link).Error
 }

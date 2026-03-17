@@ -86,8 +86,12 @@ func (s *Server) RegisterRoutes(mux *chi.Mux) {
 func (s *Server) ApiRouter(globRouter *chi.Mux) chi.Router {
 	r := chi.NewRouter()
 	s.docsRouter(globRouter, r)
+
 	path, handler := library.NewHandler(s.Library)
 	r.Handle(path+"*", handler)
+
+	path2, hand2 := library.NewHandlerHttp(s.Library)
+	r.Handle(path2+"*", http.StripPrefix(path2, hand2))
 
 	return r
 }

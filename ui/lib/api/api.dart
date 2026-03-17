@@ -40,6 +40,27 @@ class ServerUrlNotifier extends Notifier<String?> {
 
 final serverUrlProvider = NotifierProvider<ServerUrlNotifier, String?>(ServerUrlNotifier.new);
 
+// Provider for the download path
+class DownloadPathNotifier extends Notifier<String?> {
+  @override
+  String? build() {
+    if (kIsWeb) return null;
+    
+    final prefs = ref.watch(sharedPreferencesProvider);
+    return prefs.getString('download_path');
+  }
+
+  Future<void> setPath(String path) async {
+    if (kIsWeb) return;
+    
+    final prefs = ref.read(sharedPreferencesProvider);
+    await prefs.setString('download_path', path);
+    state = path;
+  }
+}
+
+final downloadPathProvider = NotifierProvider<DownloadPathNotifier, String?>(DownloadPathNotifier.new);
+
 // Provider for the connect.Transport
 final transportProvider = Provider<connect.Transport>((ref) {
   final serverUrl = ref.watch(serverUrlProvider);
