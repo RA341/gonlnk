@@ -3,6 +3,7 @@ module github.com/ra341/gonlnk
 go 1.25.0
 
 require (
+	connectrpc.com/connect v1.19.1
 	connectrpc.com/cors v0.1.0
 	dario.cat/mergo v1.0.2
 	github.com/go-chi/chi/v5 v5.2.5
@@ -16,6 +17,7 @@ require (
 	github.com/rs/zerolog v1.34.0
 	golang.org/x/net v0.52.0
 	golang.org/x/sync v0.20.0
+	google.golang.org/protobuf v1.36.11
 	gorm.io/driver/sqlite v1.6.0
 	gorm.io/gorm v1.31.1
 )

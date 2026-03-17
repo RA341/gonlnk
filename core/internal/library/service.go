@@ -34,7 +34,8 @@ func (s *Service) Add(ctx context.Context, links ...string) error {
 	var errs error
 	for _, link := range links {
 		lk := Link{
-			Url: link,
+			Url:    link,
+			Status: Queued,
 		}
 
 		err := s.db.Add(ctx, &lk)

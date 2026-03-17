@@ -10,6 +10,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/docgen"
+	"github.com/ra341/gonlnk/internal/library"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
@@ -67,8 +68,12 @@ func NewServer() {
 }
 
 func (s *Server) RegisterRoutes(mux *chi.Mux) {
+	mux.Mount(
+		"/api/",
+		http.StripPrefix("/api", s.ApiRouter(mux)),
+	)
+
 	mux.Handle("/*", http.FileServer(http.Dir("./web/")))
-	mux.Mount("/api", s.ApiRouter(mux))
 
 	mux.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
 		_, err := w.Write([]byte("welcome to gonlnk zone"))
@@ -80,8 +85,9 @@ func (s *Server) RegisterRoutes(mux *chi.Mux) {
 
 func (s *Server) ApiRouter(globRouter *chi.Mux) chi.Router {
 	r := chi.NewRouter()
-
 	s.docsRouter(globRouter, r)
+	path, handler := library.NewHandler(s.Library)
+	r.Handle(path+"*", handler)
 
 	return r
 }

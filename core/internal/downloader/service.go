@@ -126,7 +126,7 @@ func (d *Downloader) StartDownload(link *library.Link) error {
 		return err
 	}
 
-	relayURL, err := url.Parse(cfg.YtRelayUrl)
+	relayURL, err := url.Parse(cfg.YtRelayUrl + "/download")
 	if err != nil {
 		return fmt.Errorf("failed to parse relay url: %w", err)
 	}
@@ -135,7 +135,8 @@ func (d *Downloader) StartDownload(link *library.Link) error {
 	q.Set("url", link.Url)
 	relayURL.RawQuery = q.Encode()
 
-	req, err := http.NewRequestWithContext(ctx, "GET", relayURL.String(), nil)
+	s := relayURL.String()
+	req, err := http.NewRequestWithContext(ctx, "GET", s, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}

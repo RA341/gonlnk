@@ -7,10 +7,10 @@ vars:
 
   IMAGE_NAME: protobuilder/gonode
   CORE_DIR: ../core/generated
-  UI_DIR: ../ui/src/lib/gen
+  UI_DIR: ../ui/lib/gen
   GENERATED_DIR: generated
   PROTODIR: protos
-  GO_PACKAGE_BASE: "github.com/ra341/glacier/generated"
+  GO_PACKAGE_BASE: "github.com/ra341/gonlnk/generated"
 
 tasks:
   proto:*:*:
@@ -60,7 +60,16 @@ tasks:
     deps: [ geno ]
     cmds:
       - task: go
-      - task: web
+      - task: dart
+
+  dart:
+    desc: Move generated Dart files
+    cmds:
+      - task: _copy
+        vars:
+          TARGET_DIR: '{{.UI_DIR}}'
+          SOURCE_PATTERN: '{{.GENERATED_DIR}}/dart/*'
+      - '{{.cu}} rm -rf {{.GENERATED_DIR}}/dart'
 
   go:
     desc: Copy generated Go files to core directory

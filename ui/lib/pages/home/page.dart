@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'providers.dart';
+import '../../gen/library/v1/library.pb.dart' as libraryv1library;
 
 class MyHomePage extends HookConsumerWidget {
   const MyHomePage({super.key, required this.title});
@@ -13,6 +14,7 @@ class MyHomePage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final urlListAsync = ref.watch(urlListProvider);
     final addUrl = ref.read(addUrlProvider);
+    final retryAction = ref.read(retryActionProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -27,19 +29,44 @@ class MyHomePage extends HookConsumerWidget {
         ],
       ),
       body: urlListAsync.when(
-        data: (urls) => urls.isEmpty
+        data: (links) => links.isEmpty
             ? const Center(child: Text('Your URLs will appear here'))
             : ListView.builder(
-                itemCount: urls.length,
+                itemCount: links.length,
                 itemBuilder: (context, index) {
+                  final libraryv1library.Link link = links[index];
                   return ListTile(
-                    title: Text(urls[index]),
+                    title: Text(link.title.isNotEmpty ? link.title : link.url),
+                    subtitle: link.title.isNotEmpty ? Text(link.url) : null,
                     leading: const Icon(Icons.link),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(link.status),
+                        IconButton(
+                          icon: const Icon(Icons.refresh),
+                          onPressed: () => retryAction(link),
+                          tooltip: 'Retry',
+                        ),
+                      ],
+                    ),
                   );
                 },
               ),
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Error: $err')),
+        error: (err, stack) => Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Error: $err'),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => ref.invalidate(urlListProvider),
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddUrlDialog(context, ref, addUrl),

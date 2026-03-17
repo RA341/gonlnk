@@ -6,10 +6,12 @@ import (
 	"gorm.io/gorm"
 )
 
+//go:generate enumer -type=Status -output=gen_enum_status.go
 type Status int
 
 const (
-	Queued Status = iota
+	Unknown Status = iota
+	Queued
 	Downloading
 	Complete
 	Error

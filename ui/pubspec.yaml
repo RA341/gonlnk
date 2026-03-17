@@ -39,6 +39,13 @@ dependencies:
   flutter_hooks: ^0.21.3+1
   flutter_animate: ^4.5.2
 
+  web: ^1.1.1
+  http: ^1.6.0
+  connectrpc:
+  grpc: ^4.1.0
+  protobuf: ^4.2.0
+  shared_preferences: ^2.5.4
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

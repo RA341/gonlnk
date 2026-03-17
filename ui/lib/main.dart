@@ -1,11 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'main_layout.dart';
+import 'api/api.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final prefs = await SharedPreferences.getInstance();
+
   runApp(
-    const ProviderScope(
-      child: MyApp(),
+    ProviderScope(
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(prefs),
+      ],
+      child: const MyApp(),
     ),
   );
 }
@@ -17,6 +25,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Gonlnk',
+      debugShowCheckedModeBanner: false,
       darkTheme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: darken(Color(0xAA5F5AA2), 0.2),
