@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build and Release Android APK
 
 on:
   push:
@@ -13,6 +13,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -40,7 +42,18 @@ jobs:
           cd ui
           flutter build apk --release
 
-      - name: Upload APK
+      - name: Create Dev Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: dev-latest
+          name: Dev Release
+          draft: false
+          prerelease: true
+          files: ui/build/app/outputs/flutter-apk/app-release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: gonlnk-release.apk
